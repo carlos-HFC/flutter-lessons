@@ -7,6 +7,70 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return TelaInicial();
+  }
+}
+
+class TelaInicial extends StatefulWidget {
+  const TelaInicial({Key? key}) : super(key: key);
+
+  @override
+  State<TelaInicial> createState() => _TelaInicialState();
+}
+
+class _TelaInicialState extends State<TelaInicial> {
+  TextEditingController valueController = TextEditingController();
+
+  String dropdownDe = "real";
+  String dropdownPara = "real";
+  String strResult = "";
+
+  void _onChanged(String name, String value) {
+    setState(() {
+      if (name == 'de') dropdownDe = value;
+      if (name == 'para') dropdownPara = value;
+    });
+  }
+
+  void _showResult() {
+    setState(() {
+      double value = double.parse(valueController.text);
+
+      switch (dropdownDe) {
+        case 'real':
+          if (dropdownPara == 'dolar') {
+            strResult = (value / 4.93).toStringAsFixed(2);
+          } else if (dropdownPara == 'euro') {
+            strResult = (value / 5.3).toStringAsFixed(2);
+          } else {
+            strResult = value.toStringAsFixed(2);
+          }
+          break;
+        case 'dolar':
+          if (dropdownPara == 'real') {
+            strResult = (value * 4.93).toStringAsFixed(2);
+          } else if (dropdownPara == 'euro') {
+            strResult = (value / 1.08).toStringAsFixed(2);
+          } else {
+            strResult = value.toStringAsFixed(2);
+          }
+          break;
+        case 'euro':
+          if (dropdownPara == 'real') {
+            strResult = (value * 5.3).toStringAsFixed(2);
+          } else if (dropdownPara == 'dolar') {
+            strResult = (value * 1.08).toStringAsFixed(2);
+          } else {
+            strResult = value.toStringAsFixed(2);
+          }
+          break;
+        default:
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primaryColor: Colors.blue),
@@ -24,14 +88,16 @@ class MyApp extends StatelessWidget {
           mainAxisSize: MainAxisSize.max,
           children: <Widget>[
             _title(),
-            SizedBox(height: 32),
-            _item('Desenvolvedor Backend'),
-            SizedBox(height: 32),
-            _item('Engenheiro de dados'),
-            SizedBox(height: 32),
-            _item('Desenvolvedor Frontend'),
-            SizedBox(height: 32),
-            _item('DBA'),
+            SizedBox(height: 16),
+            _field(),
+            SizedBox(height: 16),
+            _dropdown("De", dropdownDe),
+            SizedBox(height: 16),
+            _dropdown("Para", dropdownPara),
+            SizedBox(height: 16),
+            _button(),
+            SizedBox(height: 16),
+            _result()
           ],
         ),
       ],
@@ -41,7 +107,7 @@ class MyApp extends StatelessWidget {
   _title() {
     return Center(
       child: Text(
-        "Vagas",
+        "Conversor de Moedas",
         style: TextStyle(
           fontSize: 32,
           color: Colors.red,
@@ -51,69 +117,80 @@ class MyApp extends StatelessWidget {
     );
   }
 
-  _item(String title) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        border: Border.all(
-          style: BorderStyle.solid,
-          color: Colors.black,
-          width: 2,
-        ),
+  _field() {
+    return TextField(
+      controller: valueController,
+      keyboardType: TextInputType.number,
+      style: TextStyle(
+        fontSize: 24,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.max,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w600,
-              color: Colors.blue,
-            ),
-          ),
-          SizedBox(height: 16),
-          _paragraph(
-            'Salário',
-            '3000',
-          ),
-          SizedBox(height: 16),
-          _paragraph(
-            'Descrição',
-            'Contrary to popular belief',
-          ),
-          SizedBox(height: 16),
-          _paragraph(
-            'Contato',
-            '(11) 12345678',
-          ),
-        ],
+      decoration: InputDecoration(
+        labelText: "Valor",
+        labelStyle: TextStyle(
+          color: Colors.black,
+          fontSize: 24,
+        ),
       ),
     );
   }
 
-  _paragraph(String title, String description) {
-    return Container(
-      child: Row(
-        mainAxisSize: MainAxisSize.max,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
+  _dropdown(String label, String controller) {
+    return Row(
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 18,
           ),
-          SizedBox(width: 10),
-          Text(
-            description,
-            style: TextStyle(
-              fontWeight: FontWeight.w400,
-              fontSize: 16,
-            ),
-          ),
-        ],
+        ),
+        SizedBox(width: 16),
+        DropdownButton<String>(
+          value: controller,
+          items: <String>['Dolar', 'Euro', 'Real'].map((String value) {
+            return DropdownMenuItem<String>(
+              value: value.toLowerCase(),
+              child: Text(
+                value,
+                style: TextStyle(
+                  fontSize: 18,
+                ),
+              ),
+            );
+          }).toList(),
+          onChanged: (String? selected) {
+            _onChanged(label.toLowerCase(), selected!);
+          },
+        ),
+      ],
+    );
+  }
+
+  _button() {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.blue,
+        fixedSize: Size(150, 50),
+      ),
+      onPressed: _showResult,
+      child: Text(
+        "Converter",
+        style: TextStyle(
+          color: Colors.black,
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  _result() {
+    return Center(
+      child: Text(
+        strResult,
+        style: TextStyle(
+          color: Colors.green,
+          fontSize: 24,
+        ),
       ),
     );
   }
